@@ -1,122 +1,136 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { useState } from "react";
+import { languages } from "./assets/languages";
+import clsx from "clsx";
+import { getFarewellText } from "./utils";
 
-function App() {
-  const [count, setCount] = useState(0)
+/**
+ * Goal: Build out the main parts of our app
+ *
+ * Challenge: Add a header with the game title
+ * and description. Startin' out easy 🙂🚶‍➡️
+ */
+
+export default function AssemblyEndgame() {
+  // state values
+  const [currentWord, setCurrentWord] = useState("abc");
+  const [guessedLetters, setGuessedLetters] = useState([]);
+
+  // derived values
+  const wrongGuessCount = guessedLetters.filter(
+    (letter) => !currentWord.includes(letter),
+  ).length;
+  const isGameWon = currentWord
+    .split("")
+    .every((letter) => guessedLetters.includes(letter));
+  const isGameLost = wrongGuessCount >= languages.length - 1;
+  const isGameOver = isGameWon || isGameLost;
+  const lastGuessedLetter = guessedLetters[guessedLetters.length - 1];
+  const isLastGuessIncorrect =
+    lastGuessedLetter && !currentWord.includes(lastGuessedLetter);
+
+  // static values
+  const alphabet = "abcdefghijklmnopqrstuvwxyz";
+
+  function addGuessedLetter(newLetter) {
+    setGuessedLetters((prevLetters) =>
+      prevLetters.includes(newLetter)
+        ? prevLetters
+        : [...prevLetters, newLetter],
+    );
+  }
+
+  function renderGameStatus() {
+    if (!isGameOver && isLastGuessIncorrect) {
+      const language = languages[wrongGuessCount - 1];
+      const itemDown = getFarewellText(language.name);
+      
+      return (
+        <p className="farewell-message">{itemDown} 🫡 </p>
+      )
+    } else if (!isGameOver) {
+      return null;
+    }
+    if (isGameWon) {
+      return (
+        <>
+          <h2>You Win!</h2>
+          <p>Well Done! 🎉</p>
+        </>
+      );
+    } else if (isGameLost) {
+      return (
+        <>
+          <h2>Game Over!</h2>
+          <p>You lose! Better start learning Assembly! 😭</p>
+        </>
+      );
+    }
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
+    <main>
+      <header>
+        <h1 className='title'>Assembly: Endgame</h1>
+        <p className='description'>
+          Guess the word in under 8 attempts to keep the programming world safe
+          from Assembly!
+        </p>
+      </header>
+      <section
+        className={clsx("game-status ", {
+          won: isGameWon,
+          lost: isGameLost,
+          farewell: !isGameOver && isLastGuessIncorrect,
+        })}
+      >
+        {renderGameStatus()}
       </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
+      <section className='language-chips'>
+        {languages.map((item, index) => (
+          <span
+            key={item.name}
+            className={clsx("chip ", {
+              lost: index < wrongGuessCount,
+            })}
+            style={{ color: item.color, backgroundColor: item.backgroundColor }}
+          >
+            {item.name}
+          </span>
+        ))}
       </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+      <section className='word'>
+        {currentWord.split("").map((letter, index) => {
+          const guessed = guessedLetters.includes(letter);
+          const inWord = currentWord.includes(letter);
+          return (
+            <span key={index} className='letter'>
+              {guessed && inWord && letter.toUpperCase()}
+            </span>
+          );
+        })}
+      </section>
+      <section className='keyboard'>
+        {alphabet.split("").map((letter) => {
+          const guessed = guessedLetters.includes(letter);
+          const inWord = currentWord.includes(letter);
+          return (
+            <button
+              onClick={() => {
+                addGuessedLetter(letter);
+              }}
+              key={letter}
+              disabled={isGameOver}
+              className={clsx("key", {
+                correct: guessed && inWord,
+                wrong: guessed && !inWord,
+              })}
+            >
+              {letter.toUpperCase()}
+            </button>
+          );
+        })}
+      </section>
+      {isGameOver && <button className='new-game'>New Game</button>}
+    </main>
+  );
 }
-
-export default App
